@@ -1,34 +1,31 @@
-
-async function toJsonOrThrow(res){
-  const txt = await res.text()
-  let data; try{ data = JSON.parse(txt) }catch{ throw new Error(txt || res.statusText) }
-  if(!res.ok) throw new Error(data?.error || res.statusText)
-  return data
-}
-
-export async function uploadImageToBlob(dataUrl, path){
-  const res = await fetch('/api/upload', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ file:dataUrl, path })
+// utils/cloud.js
+export async function uploadImageToBlob(dataUrl, pathBase) {
+  const r = await fetch('/api/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dataUrl, pathBase })
   })
-  const data = await toJsonOrThrow(res)
-  return data.url
+  if (!r.ok) throw new Error('Upload failed')
+  const { url } = await r.json()
+  // url already has ?v=timestamp from the API, but keep this in case of proxies
+  return `${url}&cb=${Date.now()}`
 }
 
-export async function saveSetsToBlob(sets){
-  const res = await fetch('/api/saveSets', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ sets })
+// Save your sets JSON (unchanged)
+export async function saveSetsToBlob(sets) {
+  const r = await fetch('/api/save-sets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sets, savedAt: Date.now() })
   })
-  await toJsonOrThrow(res)
-  return true
+  if (!r.ok) throw new Error('Save sets failed')
+  return await r.json()
 }
 
-export async function loadSetsFromBlob(){
-  const res = await fetch('/api/loadSets')
-  if(res.status===404) return null
-  const data = await toJsonOrThrow(res)
-  return data.sets
+// Load with no-store + cache-buster so the latest JSON is used
+export async function loadSetsFromBlob() {
+  const r = await fetch('/api/load-sets?v=' + Date.now(), { cache: 'no-store' })
+  if (!r.ok) return null
+  const { sets } = await r.json()
+  return sets
 }
