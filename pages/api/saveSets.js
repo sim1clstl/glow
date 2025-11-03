@@ -1,30 +1,39 @@
-
-export const config = { api: { bodyParser: { sizeLimit: '4mb' } } }
-export const dynamic = 'force-dynamic'
-
+// pages/api/save-sets.js
 import { put } from '@vercel/blob'
 
+export const config = {
+  api: { bodyParser: { sizeLimit: '2mb' } },
+}
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   try {
     const token = process.env.BLOB_READ_WRITE_TOKEN
-    if (!token) return res.status(500).json({ error: 'Missing BLOB_READ_WRITE_TOKEN (connect Blob & redeploy)' })
-
-    const { sets } = req.body || {}
-    if (!Array.isArray(sets) || sets.length !== 4) {
-      return res.status(400).json({ error: 'sets must be an array of length 4' })
+    if (!token) {
+      return res.status(500).json({
+        error:
+          'Missing BLOB_READ_WRITE_TOKEN. Connect a Blob store to this project or add the token and redeploy.',
+      })
     }
 
-    const buf = Buffer.from(JSON.stringify({ sets, version: 1 }), 'utf8')
-    const { url } = await put('sets/sets.json', buf, {
+    const { sets, savedAt } = req.body || {}
+    if (!sets) return res.status(400).json({ error: 'Missing sets payload' })
+
+    const stamp = savedAt || Date.now()
+    const pathname = `game/sets-${stamp}.json`
+
+    const blob = await put(pathname, JSON.stringify({ sets, savedAt: stamp }), {
       access: 'public',
       contentType: 'application/json',
-      addRandomSuffix: false,
       token,
+      addRandomSuffix: false,
     })
 
-    return res.status(200).json({ url })
-  } catch (e) {
-    return res.status(500).json({ error: e?.message || 'Unknown save error' })
+    return res.status(200).json({ url: `${blob.url}?v=${Date.now()}` })
+  } catch (err) {
+    return res.status(500).json({ error: err?.message || String(err) })
   }
 }
