@@ -1,13 +1,67 @@
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import SetupPanel from '../components/SetupPanel'
 import GameBoard from '../components/GameBoard'
 import { loadSets } from '../utils/storage'
 
 export default function Home(){
-  const [mode,setMode]=useState('setup')
-  const [gameSet,setGameSet]=useState(null)
-  const pickRandomSet=()=>{ const s=loadSets(); if(!s) return null; const avail=s.filter(set=> set && set.products?.some(p=>p.caption||p.image) && set.effects?.some(e=>e.text||e.image)); if(avail.length===0) return null; return avail[Math.floor(Math.random()*avail.length)] }
-  const startGame=()=>{ const pick=pickRandomSet(); if(!pick){ alert('Please complete at least one set and press Save.'); return } setGameSet(pick); setMode('game') }
-  const playAgain=()=>{ const pick=pickRandomSet(); if(!pick){ alert('Please complete at least one set and press Save.'); setMode('setup'); return } setGameSet(pick) }
-  return (<div className="container">{mode==='setup' ? (<><div className="header"><div style={{display:'flex',alignItems:'center'}}><div className="logo" /><div className="title">Glow Match</div></div><div className="toolbar"><button className="btn" onClick={startGame}>Start Game</button><button className="btn" onClick={()=>{const d=document.documentElement; if(!document.fullscreenElement){ d.requestFullscreen?.(); } else { document.exitFullscreen?.(); }}}>Fullscreen</button></div></div><SetupPanel onStart={startGame} /></>) : (<GameBoard data={gameSet} onBack={()=>setMode('setup')} onPlayAgain={playAgain} />)}</div>)}
+  const [mode, setMode] = useState('setup')
+  const [gameSet, setGameSet] = useState(null)
+
+  useEffect(()=>{
+    // ensure body scroll state is reset when swapping modes
+    document.body.classList.remove('no-scroll')
+  }, [mode])
+
+  const pickRandomSet = ()=>{
+    const s = loadSets()
+    if(!s) return null
+    const available = s.filter(set => set && set.products?.some(p=>p.caption || p.image) && set.effects?.some(e=>e.text || e.image))
+    if(available.length === 0) return null
+    return available[Math.floor(Math.random()*available.length)]
+  }
+  const startGame = ()=>{
+    const pick = pickRandomSet()
+    if(!pick){ alert('Please complete at least one set and press Save.'); return }
+    setGameSet(pick); setMode('game')
+  }
+  const playAgain = ()=>{
+    const pick = pickRandomSet()
+    if(!pick){ alert('Please complete at least one set and press Save.'); setMode('setup'); return }
+    setGameSet(pick)
+  }
+
+  const toggleFull = ()=>{
+    const d=document.documentElement
+    if(!document.fullscreenElement){ d.requestFullscreen?.() } else { document.exitFullscreen?.() }
+  }
+
+  return (
+    <div className="container">
+      <div className="header">
+        <div className="logo" /><div className="title">Glow Match</div>
+      </div>
+
+      {mode==='setup' ? (
+        <SetupPanel onStart={startGame} />
+      ) : (
+        <GameBoard data={gameSet} />
+      )}
+
+      <div className="bottomBar">
+        {mode==='setup' ? (
+          <>
+            <button className="btn" onClick={startGame}>Start Game</button>
+            <button className="btn" onClick={toggleFull}>Fullscreen</button>
+          </>
+        ) : (
+          <>
+            <button className="btn ghost" onClick={()=> setMode('setup')}>Setup</button>
+            <button className="btn secondary" onClick={playAgain}>New Set</button>
+            <button className="btn" onClick={toggleFull}>Fullscreen</button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

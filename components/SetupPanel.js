@@ -139,10 +139,10 @@ export default function SetupPanel({ onStart }){
 
       <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:12}}>
         <button className="btn secondary" onClick={saveLocal}>Save (Local)</button>
-        <button className="btn" onClick={()=> onStart?.()}>Start Game</button>
         <button className="btn ghost" onClick={resetAll}>Reset All (Local)</button>
         <button className="btn" onClick={saveCloud}>Save to Cloud</button>
         <button className="btn ghost" onClick={loadCloud}>Load from Cloud</button>
+        <button className="btn" onClick={()=> onStart?.()}>Start Game</button>
       </div>
     </div>
   )
