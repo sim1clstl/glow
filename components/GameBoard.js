@@ -93,15 +93,20 @@ export default function GameBoard({ data }){
   return (
     <div style={{display:'flex',flexDirection:'column',gap:6,height:'100%'}}>
       <div className="board" style={{touchAction:'none'}}>
-        {/* Products */}
+        {/* Products (left) — image circles */}
         <div className="col left">
           <h2>Products</h2>
           <div className="list">
             {left.map((p,i)=> (
               <div key={p.id} className="card left">
-                <div className="vimg">{p.image ? <img src={p.image} alt={p.caption || 'product'} /> : <span style={{color:'#8aa9cc'}}>No image</span>}</div>
+                <div className="circleBubble">
+                  {p.image ? <img src={p.image} alt={p.caption || 'product'} /> 
+                           : <span style={{color:'#8aa9cc'}}>No image</span>}
+                </div>
                 <div className="cap">{p.caption || `Product ${i+1}`}</div>
-                <div className="dot" data-id={p.id} onPointerDown={(e)=> onStartDrag(e, p.id, e.currentTarget)} onTouchStart={(e)=> onStartDrag(e, p.id, e.currentTarget)} />
+                <div className="dot" data-id={p.id}
+                     onPointerDown={(e)=> onStartDrag(e, p.id, e.currentTarget)}
+                     onTouchStart={(e)=> onStartDrag(e, p.id, e.currentTarget)} />
               </div>
             ))}
           </div>
@@ -112,13 +117,13 @@ export default function GameBoard({ data }){
           <div className="stats"><div className="score">{score}/{scoreTotal}</div><div className="small">matches</div></div>
         </div>
 
-        {/* Skin Concerns (text-only circles) */}
+        {/* Skin Concerns (right) — text circles */}
         <div className="col right">
           <h2>Skin Concerns</h2>
           <div className="list">
             {right.map((e,i)=> (
               <div key={e.id} className="card right">
-                <div className="effectBubble"><div className="effectText">{e.text || `Effect ${i+1}`}</div></div>
+                <div className="circleBubble"><div className="circleText">{e.text || `Effect ${i+1}`}</div></div>
                 <div className="dot" data-id={e.pid} />
               </div>
             ))}
