@@ -12,11 +12,12 @@ export default function GameBoard({ data }){
   const [won, setWon] = useState(false)
 
   const svgRef = useRef(null)
-  const wiresRef = useRef(null)
-  const ghostRef = useRef(null)
+  const coreRef = useRef(null)   // main line
+  const glowRef = useRef(null)   // glow line
   const cursorRef = useRef(null)
   const activeRef = useRef(null)
 
+  // lock page scrolling while game is open
   useEffect(()=>{ document.body.classList.add('no-scroll'); return ()=> document.body.classList.remove('no-scroll') }, [])
 
   const preventTouchMove = (ev)=> ev.preventDefault()
@@ -32,9 +33,10 @@ export default function GameBoard({ data }){
 
   useEffect(()=>{ if(score===left.length) setWon(true) }, [score, left.length])
 
+  // reset wires when we reshuffle
   useEffect(()=>{ 
-    wiresRef.current && (wiresRef.current.innerHTML='')
-    ghostRef.current && (ghostRef.current.innerHTML='')
+    coreRef.current && (coreRef.current.innerHTML='')
+    glowRef.current && (glowRef.current.innerHTML='')
     cursorRef.current && (cursorRef.current.innerHTML='')
     activeRef.current=null; setMatches({}); setWon(false)
     document.querySelectorAll('.card').forEach(c=> c.classList.remove('matched'))
@@ -42,20 +44,17 @@ export default function GameBoard({ data }){
 
   function startWire(id, fromDot, startPt){
     const {x,y}=anchorPos(svgRef.current, fromDot)
-    const lineBg=makeSvg('path','wire bg')
-    const line=makeSvg('path','wire')
-    const ghost=makeSvg('path','wire ghost')
-    const cursor=makeSvg('circle')
-    cursor.setAttribute('r','12'); cursor.setAttribute('fill','url(#wireGradient)')
-    wiresRef.current.appendChild(lineBg); wiresRef.current.appendChild(line)
-    ghostRef.current.appendChild(ghost); cursorRef.current.appendChild(cursor)
-    activeRef.current={id, fromDot, lineBg, line, ghost, cursor, start:{x,y}}
+    const glow = makeSvg('path','wire glow')
+    const core = makeSvg('path','wire core')
+    const cursor=makeSvg('circle'); cursor.setAttribute('r','10'); cursor.setAttribute('fill','url(#wireGradient)')
+    glowRef.current.appendChild(glow); coreRef.current.appendChild(core); cursorRef.current.appendChild(cursor)
+    activeRef.current={id, fromDot, glow, core, cursor, start:{x,y}}
     drawActive(startPt.x,startPt.y)
   }
   function drawActive(toX,toY){
     const a=activeRef.current; if(!a) return
     const d=curve(a.start.x,a.start.y,toX,toY)
-    a.lineBg.setAttribute('d',d); a.line.setAttribute('d',d); a.ghost.setAttribute('d',d)
+    a.glow.setAttribute('d',d); a.core.setAttribute('d',d)
     a.cursor.setAttribute('cx',toX); a.cursor.setAttribute('cy',toY)
   }
   function finalizeWire(toDot){
@@ -65,13 +64,13 @@ export default function GameBoard({ data }){
     if(ok){
       const end=anchorPos(svgRef.current,toDot)
       const d=curve(a.start.x,a.start.y,end.x,end.y)
-      a.lineBg.setAttribute('d',d); a.line.setAttribute('d',d)
-      a.ghost.remove(); a.cursor.remove()
+      a.glow.setAttribute('d',d); a.core.setAttribute('d',d)
+      a.cursor.remove()
       setMatches(m=>({...m,[fromId]:true}))
       a.fromDot.closest('.card').classList.add('matched')
       toDot.closest('.card').classList.add('matched')
     }else{
-      a.lineBg.remove(); a.line.remove(); a.ghost.remove(); a.cursor.remove()
+      a.glow.remove(); a.core.remove(); a.cursor.remove()
       if(toDot) flashWrong(toDot.closest('.card'))
     }
     a.fromDot.classList.remove('active')
@@ -79,6 +78,7 @@ export default function GameBoard({ data }){
     window.removeEventListener('touchmove', preventTouchMove)
     activeRef.current=null
   }
+
   function makeSvg(tag, cls){ const el=document.createElementNS('http://www.w3.org/2000/svg',tag); if(cls) el.setAttribute('class',cls); return el }
   function clientToSvg(svg, ev){ const r=svg.getBoundingClientRect(); const t=ev.touches?.[0]; const p=t?{x:t.clientX,y:t.clientY}:{x:ev.clientX,y:ev.clientY}; return {x:p.x-r.left,y:p.y-r.top} }
   function anchorPos(svg, dot){ const rect=svg.getBoundingClientRect(); const r=dot.getBoundingClientRect(); return {x:r.left+r.width/2-rect.left, y:r.top+r.height/2-rect.top} }
@@ -93,6 +93,7 @@ export default function GameBoard({ data }){
   return (
     <div style={{display:'flex',flexDirection:'column',gap:6,height:'100%'}}>
       <div className="board" style={{touchAction:'none'}}>
+        {/* Left Column */}
         <div className="col left">
           <h2>Products</h2>
           <div className="list">
@@ -106,10 +107,12 @@ export default function GameBoard({ data }){
           </div>
         </div>
 
+        {/* Center Score */}
         <div className="rail">
           <div className="stats"><div className="score">{score}/{scoreTotal}</div><div className="small">matches</div></div>
         </div>
 
+        {/* Right Column */}
         <div className="col right">
           <h2>Skin Concerns</h2>
           <div className="list">
@@ -123,10 +126,26 @@ export default function GameBoard({ data }){
           </div>
         </div>
 
+        {/* SVG Wires */}
         <div className="wires">
           <svg ref={svgRef}>
-            <defs><linearGradient id="wireGradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#5fd0ff" /><stop offset="100%" stopColor="#2f6fff" /></linearGradient></defs>
-            <g ref={wiresRef}></g><g ref={ghostRef}></g><g ref={cursorRef}></g>
+            <defs>
+              <linearGradient id="wireGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#5fd0ff" />
+                <stop offset="100%" stopColor="#2f6fff" />
+              </linearGradient>
+              <!-- soft outer glow -->
+              <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <g ref={glowRef}></g>
+            <g ref={coreRef}></g>
+            <g ref={cursorRef}></g>
           </svg>
         </div>
       </div>
