@@ -12,20 +12,27 @@ export default function Home(){
   const pickRandomSet = ()=>{
     const s = loadSets()
     if(!s) return null
-    const available = s.filter(set => set && set.products?.some(p=>p.caption || p.image) && set.effects?.some(e=>e.text || e.image))
+    const available = s.filter(set =>
+      set &&
+      set.products?.some(p=>p.caption || p.image) &&
+      set.effects?.some(e=>e.text || e.image)
+    )
     if(available.length === 0) return null
     return available[Math.floor(Math.random()*available.length)]
   }
+
   const startGame = ()=>{
     const pick = pickRandomSet()
     if(!pick){ alert('Please complete at least one set and press Save.'); return }
     setGameSet(pick); setMode('game')
   }
+
   const playAgain = ()=>{
     const pick = pickRandomSet()
     if(!pick){ alert('Please complete at least one set and press Save.'); setMode('setup'); return }
     setGameSet(pick)
   }
+
   const toggleFull = ()=>{
     const d=document.documentElement
     if(!document.fullscreenElement){ d.requestFullscreen?.() } else { document.exitFullscreen?.() }
@@ -34,7 +41,8 @@ export default function Home(){
   return (
     <div className="container">
       <div className="header">
-        <div className="logo" /><div className="title">Glow Match</div>
+        <div className="logo" />
+        <div className="title">Skin Care Match</div>
       </div>
 
       {mode==='setup' ? <SetupPanel onStart={startGame} /> : <GameBoard data={gameSet} />}
