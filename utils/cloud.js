@@ -1,31 +1,35 @@
 // utils/cloud.js
+/**
+ * Uploads a base64 data URL as a public blob.
+ * Returns a unique URL (with cache-buster) so UIs refresh immediately.
+ */
 export async function uploadImageToBlob(dataUrl, pathBase) {
   const r = await fetch('/api/upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ dataUrl, pathBase })
+    body: JSON.stringify({ dataUrl, pathBase }),
   })
-  if (!r.ok) throw new Error('Upload failed')
-  const { url } = await r.json()
-  // url already has ?v=timestamp from the API, but keep this in case of proxies
-  return `${url}&cb=${Date.now()}`
+  const out = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error(out?.error || 'Upload failed')
+  return out.url // already contains ?v=stamp
 }
 
-// Save your sets JSON (unchanged)
+/** Save whole sets JSON to blob (writes a new version each time). */
 export async function saveSetsToBlob(sets) {
   const r = await fetch('/api/save-sets', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sets, savedAt: Date.now() })
+    body: JSON.stringify({ sets, savedAt: Date.now() }),
   })
-  if (!r.ok) throw new Error('Save sets failed')
-  return await r.json()
+  const out = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error(out?.error || 'Save sets failed')
+  return out
 }
 
-// Load with no-store + cache-buster so the latest JSON is used
+/** Load the latest sets JSON from blob (no-store to avoid stale caches). */
 export async function loadSetsFromBlob() {
   const r = await fetch('/api/load-sets?v=' + Date.now(), { cache: 'no-store' })
-  if (!r.ok) return null
-  const { sets } = await r.json()
-  return sets
+  const out = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error(out?.error || 'Load sets failed')
+  return out.sets ?? null
 }
