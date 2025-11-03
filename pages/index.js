@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import SetupPanel from '../components/SetupPanel'
 import GameBoard from '../components/GameBoard'
@@ -8,10 +7,7 @@ export default function Home(){
   const [mode, setMode] = useState('setup')
   const [gameSet, setGameSet] = useState(null)
 
-  useEffect(()=>{
-    // ensure body scroll state is reset when swapping modes
-    document.body.classList.remove('no-scroll')
-  }, [mode])
+  useEffect(()=>{ document.body.classList.remove('no-scroll') }, [mode])
 
   const pickRandomSet = ()=>{
     const s = loadSets()
@@ -30,7 +26,6 @@ export default function Home(){
     if(!pick){ alert('Please complete at least one set and press Save.'); setMode('setup'); return }
     setGameSet(pick)
   }
-
   const toggleFull = ()=>{
     const d=document.documentElement
     if(!document.fullscreenElement){ d.requestFullscreen?.() } else { document.exitFullscreen?.() }
@@ -42,11 +37,7 @@ export default function Home(){
         <div className="logo" /><div className="title">Glow Match</div>
       </div>
 
-      {mode==='setup' ? (
-        <SetupPanel onStart={startGame} />
-      ) : (
-        <GameBoard data={gameSet} />
-      )}
+      {mode==='setup' ? <SetupPanel onStart={startGame} /> : <GameBoard data={gameSet} />}
 
       <div className="bottomBar">
         {mode==='setup' ? (
