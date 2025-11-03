@@ -33,7 +33,7 @@ export default function GameBoard({ data }){
 
   useEffect(()=>{ if(score===left.length) setWon(true) }, [score, left.length])
 
-  // reset wires when the shuffled arrays change
+  // reset wires when shuffled arrays change
   useEffect(()=>{ 
     wiresRef.current && (wiresRef.current.innerHTML='')
     ghostRef.current && (ghostRef.current.innerHTML='')
@@ -95,6 +95,7 @@ export default function GameBoard({ data }){
   return (
     <div style={{display:'flex',flexDirection:'column',gap:6,height:'100%'}}>
       <div className="board" style={{touchAction:'none'}}>
+        {/* Left Column */}
         <div className="col left">
           <h2>Products</h2>
           <div className="list">
@@ -108,10 +109,12 @@ export default function GameBoard({ data }){
           </div>
         </div>
 
+        {/* Center Score */}
         <div className="rail">
           <div className="stats"><div className="score">{score}/{scoreTotal}</div><div className="small">matches</div></div>
         </div>
 
+        {/* Right Column */}
         <div className="col right">
           <h2>Skin Concerns</h2>
           <div className="list">
@@ -125,6 +128,7 @@ export default function GameBoard({ data }){
           </div>
         </div>
 
+        {/* SVG Wires */}
         <div className="wires">
           <svg ref={svgRef}>
             <defs><linearGradient id="wireGradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#5fd0ff" /><stop offset="100%" stopColor="#2f6fff" /></linearGradient></defs>
