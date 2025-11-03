@@ -1,18 +1,29 @@
-
-export const dynamic = 'force-dynamic'
-
+// pages/api/load-sets.js
 import { list } from '@vercel/blob'
 
-export default async function handler(req, res){
-  try{
-    const { blobs } = await list({ prefix: 'sets/sets.json' })
-    const hit = blobs?.find(b=> b.pathname === 'sets/sets.json')
-    if(!hit) return res.status(404).json({ error:'sets/sets.json not found' })
-    const r = await fetch(hit.url, { cache: 'no-store' })
-    if(!r.ok) return res.status(500).json({ error: 'Fetch failed: ' + r.status })
-    const json = await r.json()
-    res.status(200).json({ sets: json.sets || null })
-  }catch(e){
-    res.status(500).json({ error: e?.message || 'Unknown load error' })
+export const config = {
+  api: { bodyParser: false },
+}
+
+export default async function handler(_req, res) {
+  try {
+    // find latest saved sets by prefix
+    const { blobs } = await list({ prefix: 'game/sets-' })
+    if (!blobs || blobs.length === 0) {
+      return res.status(200).json({ sets: null })
+    }
+
+    // sort by uploadedAt (desc) and use the newest
+    const latest = blobs.sort(
+      (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)
+    )[0]
+
+    // fetch JSON and return it (add cache-buster to avoid any stale proxy)
+    const r = await fetch(`${latest.url}?v=${Date.now()}`, { cache: 'no-store' })
+    const json = await r.json().catch(() => null)
+
+    return res.status(200).json({ sets: json?.sets ?? null })
+  } catch (err) {
+    return res.status(500).json({ error: err?.message || String(err) })
   }
 }
