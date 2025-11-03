@@ -26,9 +26,7 @@ button{font-weight:700;letter-spacing:.2px;border:none;border-radius:14px;cursor
 
 /* Layout */
 .container{height:100svh; display:flex; flex-direction:column; gap:8px; padding:8px}
-@supports (-webkit-touch-callout: none) { /* iOS fill fix */
-  .container{ height:-webkit-fill-available; }
-}
+@supports (-webkit-touch-callout: none) { .container{ height:-webkit-fill-available; } }
 
 .header{height:52px; display:flex; align-items:center; gap:10px; background:var(--panel); border-radius:16px; box-shadow:var(--shadow); padding:8px 12px}
 .logo{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--aqua),var(--blue));box-shadow:0 0 24px rgba(95,208,255,.45),0 0 48px rgba(47,111,255,.25)}
@@ -50,28 +48,26 @@ button{font-weight:700;letter-spacing:.2px;border:none;border-radius:14px;cursor
   display:grid;
   grid-template-columns:1fr 40px 1fr;
   gap:8px;
-  height:calc(100svh - 52px - 56px - 14px); /* header + bottomBar + small gap */
+  height:calc(100svh - 52px - 56px - 14px);
 }
 
 /* Columns */
 .col{background:var(--panel); border-radius:16px; box-shadow:var(--shadow); padding:8px; overflow:hidden}
 .col h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;opacity:.8;margin:0 0 8px}
 
-/* Make three cards auto-fit vertically (no scroll) */
+/* Make three cards auto-fit vertically */
 .list{
   display:flex; flex-direction:column;
   justify-content:center;
   height:100%;
   gap:6px;
 }
-
 .card{
-  flex:0 0 calc(33.333% - 8px); /* 3 items per column that fit perfectly */
+  flex:0 0 calc(33.333% - 8px);
   display:flex; flex-direction:column; justify-content:flex-start; align-items:center;
   background:#fff; border:1px solid #e8f1ff; border-radius:14px; box-shadow:var(--shadow);
   position:relative; padding:6px; min-height:0;
 }
-
 .vimg{
   width:30vw; height:30vw;
   max-width:120px; max-height:120px;
@@ -91,28 +87,28 @@ button{font-weight:700;letter-spacing:.2px;border:none;border-radius:14px;cursor
   background:white;border:3px solid var(--blue);
   box-shadow:0 0 0 6px rgba(95,208,255,.18),0 0 20px rgba(47,111,255,.35);
   display:grid;place-items:center;
-  touch-action:none; /* critical for iOS drag */
+  touch-action:none;
 }
 .dot::after{content:"";width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--blue))}
 .left .dot{position:absolute; top:8px; right:8px}
 .right .dot{position:absolute; top:8px; left:8px}
 
-/* Center score */
+/* Score */
 .rail{display:grid;place-items:center}
 .stats{background:linear-gradient(180deg,#fff 0 40%,#f3f9ff);border:1px solid #e6f0ff;border-radius:14px;padding:6px 8px;box-shadow:var(--shadow);text-align:center}
 .score{font-size:18px;font-weight:800}
 .small{color:var(--ink-soft);font-size:11px}
 
-/* SVG wires */
+/* SVG wires - no black lines now */
 .wires{position:absolute;inset:0;pointer-events:none;z-index:9}
 svg{width:100%;height:100%}
-.wire{stroke:url(#wireGradient);stroke-width:12;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 6px 12px rgba(32,88,196,.3))}
-.wire.bg{stroke:white;stroke-width:22;opacity:.95}
-.wire.ghost{stroke-dasharray:12 14;opacity:.85}
+.wire{stroke:url(#wireGradient);stroke-width:12;stroke-linecap:round;stroke-linejoin:round;filter:none;}
+.wire.bg{stroke:#cfe8ff;stroke-width:20;opacity:.6;}
+.wire.ghost{stroke-dasharray:14 12;opacity:.7;stroke:url(#wireGradient)}
 
 .hint{display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:12px}
 
-/* Setup page: leave space so bottomBar doesn't cover buttons */
+/* Setup page padding */
 .setup{ background:var(--panel); border-radius:16px; box-shadow:var(--shadow); padding:10px; padding-bottom:80px }
 .setTabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .field{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
@@ -122,6 +118,4 @@ svg{width:100%;height:100%}
 .uploadBox input[type="file"]{width:100%}
 .preview{width:100%;height:140px;background:#f6fbff;border:1px solid #e8f1ff;display:grid;place-items:center;border-radius:12px;overflow:hidden}
 .preview img{max-width:100%;max-height:100%;object-fit:contain}
-
-/* hide any leftover inner scrollbars */
 .col::-webkit-scrollbar{ width:0; height:0 }
