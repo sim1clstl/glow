@@ -46,7 +46,8 @@ export default function GameBoard({ data }){
     const halo=makeSvg('path','wire halo')
     const core=makeSvg('path','wire core')
     const cursor=makeSvg('circle')
-    cursor.setAttribute('r','10'); cursor.setAttribute('fill','url(#wireGradient)')
+    cursor.setAttribute('r','10'); 
+    cursor.setAttribute('fill','url(#wireGradient)')
     haloRef.current.appendChild(halo); coreRef.current.appendChild(core); cursorRef.current.appendChild(cursor)
     activeRef.current={id, fromDot, halo, core, cursor, start:{x,y}}
     drawActive(startPt.x,startPt.y)
@@ -79,14 +80,49 @@ export default function GameBoard({ data }){
     activeRef.current=null
   }
 
-  function makeSvg(tag, cls){ const el=document.createElementNS('http://www.w3.org/2000/svg',tag); if(cls) el.setAttribute('class',cls); return el }
-  function clientToSvg(svg, ev){ const r=svg.getBoundingClientRect(); const t=ev.touches?.[0]; const p=t?{x:t.clientX,y:t.clientY}:{x:ev.clientX,y:ev.clientY}; return {x:p.x-r.left,y:p.y-r.top} }
-  function anchorPos(svg, dot){ const rect=svg.getBoundingClientRect(); const r=dot.getBoundingClientRect(); return {x:r.left+r.width/2-rect.left, y:r.top+r.height/2-rect.top} }
-  function curve(x1,y1,x2,y2){ const dx=Math.abs(x2-x1); const c=Math.max(60, dx*0.6); return `M ${x1} ${y1} C ${x1+c} ${y1}, ${x2-c} ${y2}, ${x2} ${y2}` }
-  function flashWrong(el){ if(!el||!el.animate) return; el.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:280,easing:'ease-in-out'}) }
+  /* ---- helpers ---- */
+  function makeSvg(tag, cls){ 
+    const el=document.createElementNS('http://www.w3.org/2000/svg',tag); 
+    if(cls) el.setAttribute('class',cls);
+    el.setAttribute('fill','none');            // <<< prevents black banding
+    return el;
+  }
+  function clientToSvg(svg, ev){ 
+    const r=svg.getBoundingClientRect(); 
+    const t=ev.touches?.[0]; 
+    const p=t?{x:t.clientX,y:t.clientY}:{x:ev.clientX,y:ev.clientY}; 
+    return {x:p.x-r.left,y:p.y-r.top} 
+  }
+  function anchorPos(svg, dot){ 
+    const rect=svg.getBoundingClientRect(); 
+    const r=dot.getBoundingClientRect(); 
+    return {x:r.left+r.width/2-rect.left, y:r.top+r.height/2-rect.top} 
+  }
+  function curve(x1,y1,x2,y2){ 
+    const dx=Math.abs(x2-x1); const c=Math.max(60, dx*0.6); 
+    return `M ${x1} ${y1} C ${x1+c} ${y1}, ${x2-c} ${y2}, ${x2} ${y2}` 
+  }
+  function flashWrong(el){ 
+    if(!el||!el.animate) return; 
+    el.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:280,easing:'ease-in-out'}) 
+  }
   const isMobile=()=> typeof window!=='undefined' && window.innerWidth<720
-  function pickTarget(x,y){ const MAX=isMobile()?84:60; const dots=document.querySelectorAll('.right .dot'); let best=null,bd=1e9; dots.forEach(d=>{ const a=anchorPos(svgRef.current,d); const dist=Math.hypot(a.x-x,a.y-y); if(dist<bd){bd=dist;best=d} }); return bd<=MAX?best:null }
-  const onStartDrag=(e,id,dot)=>{ e.preventDefault(); try{dot.setPointerCapture?.(e.pointerId)}catch(_){}; document.body.classList.add('is-dragging'); window.addEventListener('touchmove', preventTouchMove, { passive:false }); dot.classList.add('active'); const p=clientToSvg(svgRef.current,e); startWire(id, dot, p) }
+  function pickTarget(x,y){ 
+    const MAX=isMobile()?84:60; 
+    const dots=document.querySelectorAll('.right .dot'); 
+    let best=null,bd=1e9; 
+    dots.forEach(d=>{ const a=anchorPos(svgRef.current,d); const dist=Math.hypot(a.x-x,a.y-y); if(dist<bd){bd=dist;best=d} }); 
+    return bd<=MAX?best:null 
+  }
+  const onStartDrag=(e,id,dot)=>{ 
+    e.preventDefault(); 
+    try{dot.setPointerCapture?.(e.pointerId)}catch(_){}; 
+    document.body.classList.add('is-dragging'); 
+    window.addEventListener('touchmove', preventTouchMove, { passive:false }); 
+    dot.classList.add('active'); 
+    const p=clientToSvg(svgRef.current,e); 
+    startWire(id, dot, p) 
+  }
 
   const scoreTotal = left.length
 
