@@ -46,7 +46,7 @@ export default function GameBoard({ data }){
     const halo=makeSvg('path','wire halo')
     const core=makeSvg('path','wire core')
     const cursor=makeSvg('circle')
-    cursor.setAttribute('r','10'); 
+    cursor.setAttribute('r','10')
     cursor.setAttribute('fill','url(#wireGradient)')
     haloRef.current.appendChild(halo); coreRef.current.appendChild(core); cursorRef.current.appendChild(cursor)
     activeRef.current={id, fromDot, halo, core, cursor, start:{x,y}}
@@ -80,11 +80,11 @@ export default function GameBoard({ data }){
     activeRef.current=null
   }
 
-  /* ---- helpers ---- */
+  /* helpers */
   function makeSvg(tag, cls){ 
     const el=document.createElementNS('http://www.w3.org/2000/svg',tag); 
     if(cls) el.setAttribute('class',cls);
-    el.setAttribute('fill','none');            // <<< prevents black banding
+    el.setAttribute('fill','none');   // prevent black banding
     return el;
   }
   function clientToSvg(svg, ev){ 
@@ -129,7 +129,7 @@ export default function GameBoard({ data }){
   return (
     <div style={{display:'flex',flexDirection:'column',gap:6,height:'100%'}}>
       <div className="board" style={{touchAction:'none'}}>
-        {/* Products (left) — image circles */}
+        {/* Left: Product image circles */}
         <div className="col left">
           <h2>Products</h2>
           <div className="list">
@@ -148,12 +148,12 @@ export default function GameBoard({ data }){
           </div>
         </div>
 
-        {/* Score */}
+        {/* Center score */}
         <div className="rail">
           <div className="stats"><div className="score">{score}/{scoreTotal}</div><div className="small">matches</div></div>
         </div>
 
-        {/* Skin Concerns (right) — text circles */}
+        {/* Right: Text circles */}
         <div className="col right">
           <h2>Skin Concerns</h2>
           <div className="list">
@@ -166,7 +166,7 @@ export default function GameBoard({ data }){
           </div>
         </div>
 
-        {/* SVG Wires */}
+        {/* SVG wires */}
         <div className="wires">
           <svg ref={svgRef}>
             <defs>
