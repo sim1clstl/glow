@@ -1,6 +1,6 @@
 {
-  "name": "glow-match-next",
-  "version": "1.0.1",
+  "name": "glow-match-vercelblob",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,6 +10,8 @@
   "dependencies": {
     "next": "14.2.5",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "@vercel/blob": "0.23.2",
+    "uuid": "9.0.1"
   }
 }

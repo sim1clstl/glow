@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import SetupPanel from '../components/SetupPanel'
 import GameBoard from '../components/GameBoard'
 import { loadSets } from '../utils/storage'
