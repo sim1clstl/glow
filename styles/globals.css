@@ -5,6 +5,8 @@
   --blue:#2f6fff;
   --sky:#5fd0ff;
   --aqua:#83e0ff;
+  --shell:#eff7ff;      /* soft inside tint */
+  --ring:#d9eaff;       /* circle ring */
   --shadow: 0 10px 30px rgba(20,69,123,.15);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -46,7 +48,7 @@ button{font-weight:700;letter-spacing:.2px;border:none;border-radius:14px;cursor
   position:relative;
   flex:1; min-height:0;
   display:grid;
-  grid-template-columns:1fr minmax(24px, 48px) 1fr; /* thinner center rail on phones, wider on TV */
+  grid-template-columns:1fr minmax(24px, 48px) 1fr;
   gap:clamp(8px, 2vw, 24px);
   height:calc(100svh - 52px - 56px - 14px);
   padding-inline:clamp(0px, 2vw, 24px);
@@ -76,37 +78,40 @@ button{font-weight:700;letter-spacing:.2px;border:none;border-radius:14px;cursor
   position:relative; padding:clamp(6px, 1vw, 14px); min-height:0;
 }
 
-/* Product IMAGE (left column) */
-.vimg{
-  width: clamp(120px, 28vw, 260px);
-  height: clamp(120px, 28vw, 260px);
-  border-radius:12px; background:#f1f8ff; border:1px solid #e1eeff;
-  overflow:hidden; display:grid; place-items:center; box-shadow:var(--shadow)
-}
-@media (min-height: 1000px) {
-  .vimg{ width: clamp(150px, 24vh, 320px); height: clamp(150px, 24vh, 320px); }
-}
-.vimg img{width:100%;height:100%;object-fit:cover}
-.cap{ font-size:clamp(12px, 1.4vw, 18px); text-align:center; color:var(--ink); padding:4px 8px 6px; word-break:break-word }
-
-/* Effect BUBBLE (right column text-only) */
-.effectBubble{
+/* ===== UNIFIED CIRCLE for BOTH columns ===== */
+.circleBubble{
   width: clamp(140px, 30vw, 290px);
   height: clamp(140px, 30vw, 290px);
   border-radius:50%;
-  background: radial-gradient(circle at 30% 30%, #ffffff 35%, #f4f9ff 100%);
-  border: 2px solid #d9eaff;
-  box-shadow: inset 0 0 0 8px rgba(141,192,255,.15), var(--shadow);
+  background:
+    radial-gradient(120% 120% at 30% 30%, #fff 35%, var(--shell) 100%);
+  border: 2px solid var(--ring);
+  box-shadow:
+    inset 0 0 0 8px rgba(141,192,255,.12),
+    0 14px 32px rgba(27,72,138,.12);
   display:flex; align-items:center; justify-content:center;
   padding: clamp(10px, 2.2vw, 18px);
 }
-.effectText{
-  font-weight:800;
+
+/* Product images inside the circle — show whole image (no crop) */
+.circleBubble img{
+  max-width: 92%;
+  max-height: 92%;
+  object-fit: contain;   /* keep entire image visible */
+  display:block;
+}
+
+/* Text inside the circle (for effects) */
+.circleText{
+  font-weight:900;
   text-align:center;
   color:var(--ink);
-  line-height:1.2;
+  line-height:1.18;
   font-size: clamp(14px, 2.6vw, 24px);
 }
+
+/* Captions under each bubble */
+.cap{ font-size:clamp(12px, 1.4vw, 18px); text-align:center; color:var(--ink); padding:4px 8px 6px; word-break:break-word }
 
 /* Dots */
 .dot{
@@ -131,7 +136,7 @@ button{font-weight:700;letter-spacing:.2px;border:none;border-radius:14px;cursor
 .score{font-size:clamp(18px, 2vw, 28px);font-weight:800}
 .small{color:var(--ink-soft);font-size:clamp(11px, 1.2vw, 14px)}
 
-/* SVG wires — crisp, no dark banding (single core + subtle halo) */
+/* SVG wires — crisp, no dark banding (halo + core) */
 .wires{position:absolute;inset:0;pointer-events:none;z-index:9}
 svg{width:100%;height:100%}
 .wire.halo{stroke:#93c7ff; stroke-opacity:.35; stroke-width:clamp(18px, 3vw, 32px); stroke-linecap:round; stroke-linejoin:round; filter:none;}
