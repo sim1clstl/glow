@@ -1,42 +1,34 @@
-
-export const config = { api: { bodyParser: { sizeLimit: '25mb' } } }
-export const dynamic = 'force-dynamic'
-
+// pages/api/upload.js
 import { put } from '@vercel/blob'
-import { v4 as uuidv4 } from 'uuid'
 
-function mimeFromDataUrl(dataUrl = '') {
-  const m = dataUrl.match(/^data:(.*?);base64,/)
-  return m ? m[1] : 'image/png'
-}
+export const config = { api: { bodyParser: { sizeLimit: '10mb' } } }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   try {
-    const token = process.env.BLOB_READ_WRITE_TOKEN
-    if (!token) {
-      return res.status(500).json({ error: 'Missing BLOB_READ_WRITE_TOKEN (connect your Blob store & redeploy)' })
-    }
+    const { dataUrl, pathBase } = JSON.parse(req.body || '{}')
+    if (!dataUrl || !pathBase) return res.status(400).json({ error: 'Missing dataUrl or pathBase' })
 
-    const { file, path } = req.body || {}
-    if (!file || typeof file !== 'string' || !file.startsWith('data:')) {
-      return res.status(400).json({ error: 'Bad payload: expected data URL base64 in "file"' })
-    }
+    // Parse data URL
+    const m = dataUrl.match(/^data:(.+);base64,(.*)$/)
+    if (!m) return res.status(400).json({ error: 'Invalid data URL' })
+    const mime = m[1]
+    const buf = Buffer.from(m[2], 'base64')
+    const ext = mime.split('/')[1] || 'png'
 
-    const contentType = mimeFromDataUrl(file)
-    const base64 = file.split(',')[1]
-    const buf = Buffer.from(base64, 'base64')
+    // IMPORTANT: unique name every upload (prevents cache reuse)
+    const stamp = Date.now()
+    const pathname = `${pathBase}-${stamp}.${ext}`.replace(/\/+/g, '/')
 
-    const key = path || `uploads/${uuidv4()}.png`
-    const { url } = await put(key, buf, {
+    const blob = await put(pathname, buf, {
       access: 'public',
-      contentType,
-      addRandomSuffix: false,
-      token,
+      token: process.env.BLOB_READ_WRITE_TOKEN, // already created in your Vercel project
+      contentType: mime,
+      // addRandomSuffix: true // optional; timestamp already makes it unique
     })
 
-    return res.status(200).json({ url, key })
+    // Return URL; no-store via cache-buster for immediate UI refresh
+    res.status(200).json({ url: `${blob.url}?v=${stamp}` })
   } catch (e) {
-    return res.status(500).json({ error: e?.message || 'Unknown upload error' })
+    res.status(500).json({ error: e.message || 'Upload failed' })
   }
 }
