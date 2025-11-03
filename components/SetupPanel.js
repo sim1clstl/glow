@@ -47,7 +47,7 @@ export default function SetupPanel({ onStart }){
   return (
     <div className="setup">
       <div style={{display:'flex',alignItems:'center',gap:10, marginBottom:8}}>
-        <div className="logo" /><div style={{fontWeight:800}}>Glow Match — Setup</div>
+        <div className="logo" /><div style={{fontWeight:800}}>Skin Care Match — Setup</div>
       </div>
 
       <div className="setTabs">
