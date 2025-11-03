@@ -17,7 +17,6 @@ export default function GameBoard({ data }){
   const cursorRef = useRef(null)
   const activeRef = useRef(null)
 
-  // lock page scrolling while game is open
   useEffect(()=>{ document.body.classList.add('no-scroll'); return ()=> document.body.classList.remove('no-scroll') }, [])
 
   const preventTouchMove = (ev)=> ev.preventDefault()
@@ -33,7 +32,6 @@ export default function GameBoard({ data }){
 
   useEffect(()=>{ if(score===left.length) setWon(true) }, [score, left.length])
 
-  // reset wires when shuffled arrays change
   useEffect(()=>{ 
     wiresRef.current && (wiresRef.current.innerHTML='')
     ghostRef.current && (ghostRef.current.innerHTML='')
@@ -95,7 +93,6 @@ export default function GameBoard({ data }){
   return (
     <div style={{display:'flex',flexDirection:'column',gap:6,height:'100%'}}>
       <div className="board" style={{touchAction:'none'}}>
-        {/* Left Column */}
         <div className="col left">
           <h2>Products</h2>
           <div className="list">
@@ -109,12 +106,10 @@ export default function GameBoard({ data }){
           </div>
         </div>
 
-        {/* Center Score */}
         <div className="rail">
           <div className="stats"><div className="score">{score}/{scoreTotal}</div><div className="small">matches</div></div>
         </div>
 
-        {/* Right Column */}
         <div className="col right">
           <h2>Skin Concerns</h2>
           <div className="list">
@@ -128,7 +123,6 @@ export default function GameBoard({ data }){
           </div>
         </div>
 
-        {/* SVG Wires */}
         <div className="wires">
           <svg ref={svgRef}>
             <defs><linearGradient id="wireGradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#5fd0ff" /><stop offset="100%" stopColor="#2f6fff" /></linearGradient></defs>
@@ -140,9 +134,26 @@ export default function GameBoard({ data }){
       <div className="hint" style={{paddingBottom:'74px'}}>Drag from the left blue dot to the matching concern.</div>
 
       {won ? (
-        <div style={{position:'fixed',inset:0,background:'rgba(241,249,255,.7)',backdropFilter:'blur(6px)',display:'grid',placeItems:'center',zIndex:30}}>
-          <div style={{background:'#fff',padding:18,borderRadius:18,boxShadow:'var(--shadow)',textAlign:'center'}}>
-            <h3 style={{marginTop:0}}>Great job! ✨</h3>
+        <div style={{
+          position:'fixed', inset:0, background:'rgba(241,249,255,.7)',
+          backdropFilter:'blur(6px)', display:'grid', placeItems:'center', zIndex:30
+        }}>
+          <div style={{
+            background:'#fff', padding:18, borderRadius:18, boxShadow:'var(--shadow)', textAlign:'center'
+          }}>
+            <h3 style={{marginTop:0, color:'#0e2a4a'}}>Great job! ✨</h3>
+            <button
+              onClick={()=>{
+                setWon(false);
+                setLeft(shuffle(data.products));
+                setRight(shuffle(data.effects));
+                setMatches({});
+              }}
+              className="btn secondary"
+              style={{marginTop:10}}
+            >
+              Play Again
+            </button>
           </div>
         </div>
       ) : null}
