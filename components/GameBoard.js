@@ -1,54 +1,62 @@
-// components/GameBoard.js
 import { useEffect, useRef, useState } from 'react'
 
 function shuffle(arr){
-  return [...arr].map(v=>[Math.random(), v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1])
+  return [...arr].map(v=>[Math.random(), v])
+    .sort((a,b)=>a[0]-b[0])
+    .map(v=>v[1])
 }
 
 export default function GameBoard({ data }){
-  // shuffle at mount and whenever the data changes
-  const [left, setLeft]   = useState(()=> shuffle(data.products))
+  const [left, setLeft] = useState(()=> shuffle(data.products))
   const [right, setRight] = useState(()=> shuffle(data.effects))
   useEffect(()=>{ setLeft(shuffle(data.products)); setRight(shuffle(data.effects)) }, [data])
 
   const [matches, setMatches] = useState({})
-  const score = Object.keys(matches).length
   const [won, setWon] = useState(false)
+  const [showIntro, setShowIntro] = useState(true)
 
-  // svg / drawing refs
+  const score = Object.keys(matches).length
   const svgRef = useRef(null)
   const haloRef = useRef(null)
   const coreRef = useRef(null)
   const cursorRef = useRef(null)
   const activeRef = useRef(null)
 
-  // lock page scroll while playing (good for big touch screens)
-  useEffect(()=>{ document.body.classList.add('no-scroll'); return ()=> document.body.classList.remove('no-scroll') }, [])
-  const preventTouchMove = (ev)=> ev.preventDefault()
+  const preventTouchMove = (e)=> e.preventDefault()
 
-  // global pointer handlers
   useEffect(()=>{
-    const onMove = (ev)=>{ if(!activeRef.current) return; const p=clientToSvg(svgRef.current, ev); drawActive(p.x,p.y) }
-    const onUp = (ev)=>{ if(!activeRef.current) return; const p=clientToSvg(svgRef.current, ev); const toDot=pickTarget(p.x,p.y); finalizeWire(toDot) }
+    const onMove = (e)=>{
+      if(!activeRef.current) return
+      const p = clientToSvg(svgRef.current, e)
+      drawActive(p.x,p.y)
+    }
+    const onUp = (e)=>{
+      if(!activeRef.current) return
+      const p = clientToSvg(svgRef.current, e)
+      const toDot = pickTarget(p.x,p.y)
+      finalizeWire(toDot)
+    }
     window.addEventListener('pointermove', onMove, {passive:false})
     window.addEventListener('pointerup', onUp, {passive:false})
     window.addEventListener('touchcancel', onUp, {passive:false})
-    return ()=>{ window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('touchcancel', onUp) }
+    return ()=>{
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('touchcancel', onUp)
+    }
   }, [])
 
-  // win detect
-  useEffect(()=>{ if(score===left.length && left.length>0) setWon(true) }, [score, left.length])
-
-  // reset wires whenever we reshuffle either side
+  useEffect(()=>{ if(score === left.length && left.length>0) setWon(true) }, [score, left.length])
   useEffect(()=>{
-    haloRef.current && (haloRef.current.innerHTML='')
-    coreRef.current && (coreRef.current.innerHTML='')
-    cursorRef.current && (cursorRef.current.innerHTML='')
-    activeRef.current=null; setMatches({}); setWon(false)
+    haloRef.current && (haloRef.current.innerHTML = '')
+    coreRef.current && (coreRef.current.innerHTML = '')
+    cursorRef.current && (cursorRef.current.innerHTML = '')
+    activeRef.current = null
+    setMatches({})
+    setWon(false)
     document.querySelectorAll('.card').forEach(c=> c.classList.remove('matched'))
   }, [left,right])
 
-  /* ---------- wire logic ---------- */
   function startWire(id, fromDot, startPt){
     const {x,y}=anchorPos(svgRef.current, fromDot)
     const halo=makeSvg('path','wire halo')
@@ -56,7 +64,9 @@ export default function GameBoard({ data }){
     const cursor=makeSvg('circle')
     cursor.setAttribute('r','10')
     cursor.setAttribute('fill','url(#wireGradient)')
-    haloRef.current.appendChild(halo); coreRef.current.appendChild(core); cursorRef.current.appendChild(cursor)
+    haloRef.current.appendChild(halo)
+    coreRef.current.appendChild(core)
+    cursorRef.current.appendChild(cursor)
     activeRef.current={id, fromDot, halo, core, cursor, start:{x,y}}
     drawActive(startPt.x,startPt.y)
   }
@@ -88,78 +98,119 @@ export default function GameBoard({ data }){
     activeRef.current=null
   }
 
-  /* ---------- helpers ---------- */
-  function makeSvg(tag, cls){ 
-    const el=document.createElementNS('http://www.w3.org/2000/svg',tag); 
-    if(cls) el.setAttribute('class',cls);
-    el.setAttribute('fill','none');   // prevents black banding between strokes
-    return el;
+  function makeSvg(tag, cls){
+    const el=document.createElementNS('http://www.w3.org/2000/svg',tag)
+    if(cls) el.setAttribute('class',cls)
+    el.setAttribute('fill','none')
+    return el
   }
-  function clientToSvg(svg, ev){ 
-    const r=svg.getBoundingClientRect(); 
-    const t=ev.touches?.[0]; 
-    const p=t?{x:t.clientX,y:t.clientY}:{x:ev.clientX,y:ev.clientY}; 
-    return {x:p.x-r.left,y:p.y-r.top} 
+  function clientToSvg(svg, ev){
+    const r=svg.getBoundingClientRect()
+    const t=ev.touches?.[0]
+    const p=t?{x:t.clientX,y:t.clientY}:{x:ev.clientX,y:ev.clientY}
+    return {x:p.x-r.left,y:p.y-r.top}
   }
-  function anchorPos(svg, dot){ 
-    const rect=svg.getBoundingClientRect(); 
-    const r=dot.getBoundingClientRect(); 
-    return {x:r.left+r.width/2-rect.left, y:r.top+r.height/2-rect.top} 
+  function anchorPos(svg, dot){
+    const rect=svg.getBoundingClientRect()
+    const r=dot.getBoundingClientRect()
+    return {x:r.left+r.width/2-rect.left, y:r.top+r.height/2-rect.top}
   }
-  function curve(x1,y1,x2,y2){ 
-    const dx=Math.abs(x2-x1); const c=Math.max(60, dx*0.6); 
-    return `M ${x1} ${y1} C ${x1+c} ${y1}, ${x2-c} ${y2}, ${x2} ${y2}` 
+  function curve(x1,y1,x2,y2){
+    const dx=Math.abs(x2-x1)
+    const c=Math.max(60, dx*0.6)
+    return `M ${x1} ${y1} C ${x1+c} ${y1}, ${x2-c} ${y2}, ${x2} ${y2}`
   }
-  function flashWrong(el){ 
-    if(!el||!el.animate) return; 
+  function flashWrong(el){
+    if(!el||!el.animate) return
     el.animate(
       [{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],
       {duration:280,easing:'ease-in-out'}
     )
   }
   const isMobile=()=> typeof window!=='undefined' && window.innerWidth<720
-  function pickTarget(x,y){ 
-    const MAX=isMobile()?84:60; 
-    const dots=document.querySelectorAll('.right .dot'); 
-    let best=null,bd=1e9; 
-    dots.forEach(d=>{ const a=anchorPos(svgRef.current,d); const dist=Math.hypot(a.x-x,a.y-y); if(dist<bd){bd=dist;best=d} }); 
-    return bd<=MAX?best:null 
+  function pickTarget(x,y){
+    const MAX=isMobile()?84:60
+    const dots=document.querySelectorAll('.right .dot')
+    let best=null,bd=1e9
+    dots.forEach(d=>{
+      const a=anchorPos(svgRef.current,d)
+      const dist=Math.hypot(a.x-x,a.y-y)
+      if(dist<bd){bd=dist;best=d}
+    })
+    return bd<=MAX?best:null
   }
-  const onStartDrag=(e,id,dot)=>{ 
-    e.preventDefault(); 
-    try{dot.setPointerCapture?.(e.pointerId)}catch(_){}; 
-    document.body.classList.add('is-dragging'); 
-    window.addEventListener('touchmove', preventTouchMove, { passive:false }); 
-    dot.classList.add('active'); 
-    const p=clientToSvg(svgRef.current,e); 
-    startWire(id, dot, p) 
+  const onStartDrag=(e,id,dot)=>{
+    e.preventDefault()
+    try{dot.setPointerCapture?.(e.pointerId)}catch(_){}
+    document.body.classList.add('is-dragging')
+    window.addEventListener('touchmove', preventTouchMove, { passive:false })
+    dot.classList.add('active')
+    const p=clientToSvg(svgRef.current,e)
+    startWire(id, dot, p)
   }
 
   const scoreTotal = left.length
 
+  /* --- render --- */
   return (
     <div style={{display:'flex',flexDirection:'column',gap:6,height:'100%'}}>
+      {/* intro/instruction screen */}
+      {showIntro && (
+        <div style={{
+          position:'fixed', inset:0, zIndex:50,
+          background:'linear-gradient(180deg,#f9fbff 0%,#e9f2ff 100%)',
+          display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+          textAlign:'center', padding:'20px'
+        }}>
+          {/* ULSSI logo */}
+          <img src="/ulssi.png" alt="ULSSI" style={{width:160, marginBottom:20}} />
+          
+          {/* Lactezin + Celeteque side by side */}
+          <div style={{display:'flex', justifyContent:'center', gap:40, marginBottom:30}}>
+            <img src="/lactezin.png" alt="Lactezin" style={{width:130, height:'auto'}} />
+            <img src="/celeteque.png" alt="Celeteque" style={{width:130, height:'auto'}} />
+          </div>
+
+          <h3 style={{color:'#002b57', margin:'0 0 10px'}}>Check out our brands</h3>
+          <img src="/qr.png" alt="QR code" style={{
+            width:160, height:160, borderRadius:12,
+            boxShadow:'0 6px 18px rgba(27,72,138,.18)', marginBottom:20
+          }}/>
+
+          <div style={{maxWidth:300, color:'#335377', fontSize:15, lineHeight:1.4, marginBottom:24}}>
+            Match each skincare product to its benefit!  
+            Drag the blue dot on the left to the correct circle on the right.
+          </div>
+
+          <button
+            onClick={()=> setShowIntro(false)}
+            className="btn primary"
+            style={{padding:'12px 28px', fontSize:16}}
+          >
+            Start Game
+          </button>
+        </div>
+      )}
+
+      {/* Main game area */}
       <div className="board" style={{touchAction:'none'}}>
-        {/* Left: Product image circles */}
         <div className="col left">
           <h2>Products</h2>
           <div className="list">
-            {left.map((p,i)=> (
+            {left.map((p,i)=>(
               <div key={p.id} className="card left">
                 <div className="circleBubble">
-                  {p.image ? <img src={p.image} alt={p.caption || 'product'} /> 
-                           : <span style={{color:'#8aa9cc'}}>No image</span>}
+                  {p.image ? <img src={p.image} alt={p.caption||'product'}/> : <span style={{color:'#8aa9cc'}}>No image</span>}
                 </div>
-                <div className="cap">{p.caption || `Product ${i+1}`}</div>
+                <div className="cap">{p.caption||`Product ${i+1}`}</div>
                 <div className="dot" data-id={p.id}
-                     onPointerDown={(e)=> onStartDrag(e, p.id, e.currentTarget)}
-                     onTouchStart={(e)=> onStartDrag(e, p.id, e.currentTarget)} />
+                     onPointerDown={(e)=>onStartDrag(e,p.id,e.currentTarget)}
+                     onTouchStart={(e)=>onStartDrag(e,p.id,e.currentTarget)} />
               </div>
             ))}
           </div>
         </div>
 
-        {/* Center score */}
         <div className="rail">
           <div className="stats">
             <div className="score">{score}/{scoreTotal}</div>
@@ -167,22 +218,20 @@ export default function GameBoard({ data }){
           </div>
         </div>
 
-        {/* Right: Text circles */}
         <div className="col right">
           <h2>Benefits / Helps With</h2>
           <div className="list">
-            {right.map((e,i)=> (
+            {right.map((e,i)=>(
               <div key={e.id} className="card right">
                 <div className="circleBubble">
-                  <div className="circleText">{e.text || `Effect ${i+1}`}</div>
+                  <div className="circleText">{e.text||`Effect ${i+1}`}</div>
                 </div>
-                <div className="dot" data-id={e.pid} />
+                <div className="dot" data-id={e.pid}/>
               </div>
             ))}
           </div>
         </div>
 
-        {/* SVG wires */}
         <div className="wires">
           <svg ref={svgRef}>
             <defs>
@@ -202,8 +251,7 @@ export default function GameBoard({ data }){
         Drag from the left blue dot to the matching concern.
       </div>
 
-      {/* Win modal with QR image (qr.png in /public) */}
-      {won ? (
+      {won && (
         <div style={{
           position:'fixed', inset:0,
           background:'rgba(241,249,255,.7)',
@@ -216,7 +264,7 @@ export default function GameBoard({ data }){
             borderRadius:18,
             boxShadow:'var(--shadow)',
             textAlign:'center',
-            width: 320
+            width:320
           }}>
             <h3 style={{marginTop:0, color:'#0e2a4a', marginBottom:12}}>Great job! ✨</h3>
 
@@ -236,10 +284,11 @@ export default function GameBoard({ data }){
 
             <button
               onClick={()=>{
-                setWon(false);
-                setLeft(shuffle(data.products));
-                setRight(shuffle(data.effects));
-                setMatches({});
+                setWon(false)
+                setLeft(shuffle(data.products))
+                setRight(shuffle(data.effects))
+                setMatches({})
+                setShowIntro(true)
               }}
               className="btn secondary"
               style={{marginTop:4, width:'100%'}}
@@ -248,7 +297,7 @@ export default function GameBoard({ data }){
             </button>
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   )
 }
