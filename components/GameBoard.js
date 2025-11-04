@@ -1,3 +1,4 @@
+// components/GameBoard.js
 import { useEffect, useRef, useState } from 'react'
 
 function shuffle(arr){
@@ -5,6 +6,7 @@ function shuffle(arr){
 }
 
 export default function GameBoard({ data }){
+  // shuffle at mount and whenever the data changes
   const [left, setLeft]   = useState(()=> shuffle(data.products))
   const [right, setRight] = useState(()=> shuffle(data.effects))
   useEffect(()=>{ setLeft(shuffle(data.products)); setRight(shuffle(data.effects)) }, [data])
@@ -13,15 +15,18 @@ export default function GameBoard({ data }){
   const score = Object.keys(matches).length
   const [won, setWon] = useState(false)
 
+  // svg / drawing refs
   const svgRef = useRef(null)
   const haloRef = useRef(null)
   const coreRef = useRef(null)
   const cursorRef = useRef(null)
   const activeRef = useRef(null)
 
+  // lock page scroll while playing (good for big touch screens)
   useEffect(()=>{ document.body.classList.add('no-scroll'); return ()=> document.body.classList.remove('no-scroll') }, [])
   const preventTouchMove = (ev)=> ev.preventDefault()
 
+  // global pointer handlers
   useEffect(()=>{
     const onMove = (ev)=>{ if(!activeRef.current) return; const p=clientToSvg(svgRef.current, ev); drawActive(p.x,p.y) }
     const onUp = (ev)=>{ if(!activeRef.current) return; const p=clientToSvg(svgRef.current, ev); const toDot=pickTarget(p.x,p.y); finalizeWire(toDot) }
@@ -31,8 +36,10 @@ export default function GameBoard({ data }){
     return ()=>{ window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('touchcancel', onUp) }
   }, [])
 
-  useEffect(()=>{ if(score===left.length) setWon(true) }, [score, left.length])
+  // win detect
+  useEffect(()=>{ if(score===left.length && left.length>0) setWon(true) }, [score, left.length])
 
+  // reset wires whenever we reshuffle either side
   useEffect(()=>{
     haloRef.current && (haloRef.current.innerHTML='')
     coreRef.current && (coreRef.current.innerHTML='')
@@ -41,6 +48,7 @@ export default function GameBoard({ data }){
     document.querySelectorAll('.card').forEach(c=> c.classList.remove('matched'))
   }, [left,right])
 
+  /* ---------- wire logic ---------- */
   function startWire(id, fromDot, startPt){
     const {x,y}=anchorPos(svgRef.current, fromDot)
     const halo=makeSvg('path','wire halo')
@@ -80,11 +88,11 @@ export default function GameBoard({ data }){
     activeRef.current=null
   }
 
-  /* helpers */
+  /* ---------- helpers ---------- */
   function makeSvg(tag, cls){ 
     const el=document.createElementNS('http://www.w3.org/2000/svg',tag); 
     if(cls) el.setAttribute('class',cls);
-    el.setAttribute('fill','none');   // prevent black banding
+    el.setAttribute('fill','none');   // prevents black banding between strokes
     return el;
   }
   function clientToSvg(svg, ev){ 
@@ -104,7 +112,10 @@ export default function GameBoard({ data }){
   }
   function flashWrong(el){ 
     if(!el||!el.animate) return; 
-    el.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:280,easing:'ease-in-out'}) 
+    el.animate(
+      [{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],
+      {duration:280,easing:'ease-in-out'}
+    )
   }
   const isMobile=()=> typeof window!=='undefined' && window.innerWidth<720
   function pickTarget(x,y){ 
@@ -150,7 +161,10 @@ export default function GameBoard({ data }){
 
         {/* Center score */}
         <div className="rail">
-          <div className="stats"><div className="score">{score}/{scoreTotal}</div><div className="small">matches</div></div>
+          <div className="stats">
+            <div className="score">{score}/{scoreTotal}</div>
+            <div className="small">matches</div>
+          </div>
         </div>
 
         {/* Right: Text circles */}
@@ -159,7 +173,9 @@ export default function GameBoard({ data }){
           <div className="list">
             {right.map((e,i)=> (
               <div key={e.id} className="card right">
-                <div className="circleBubble"><div className="circleText">{e.text || `Effect ${i+1}`}</div></div>
+                <div className="circleBubble">
+                  <div className="circleText">{e.text || `Effect ${i+1}`}</div>
+                </div>
                 <div className="dot" data-id={e.pid} />
               </div>
             ))}
@@ -182,12 +198,42 @@ export default function GameBoard({ data }){
         </div>
       </div>
 
-      <div className="hint" style={{paddingBottom:'74px'}}>Drag from the left blue dot to the matching concern.</div>
+      <div className="hint" style={{paddingBottom:'74px'}}>
+        Drag from the left blue dot to the matching concern.
+      </div>
 
+      {/* Win modal with QR image (qr.png in /public) */}
       {won ? (
-        <div style={{position:'fixed',inset:0,background:'rgba(241,249,255,.7)',backdropFilter:'blur(6px)',display:'grid',placeItems:'center',zIndex:30}}>
-          <div style={{background:'#fff',padding:18,borderRadius:18,boxShadow:'var(--shadow)',textAlign:'center'}}>
-            <h3 style={{marginTop:0, color:'#0e2a4a'}}>Great job! ✨</h3>
+        <div style={{
+          position:'fixed', inset:0,
+          background:'rgba(241,249,255,.7)',
+          backdropFilter:'blur(6px)',
+          display:'grid', placeItems:'center', zIndex:30
+        }}>
+          <div style={{
+            background:'#fff',
+            padding:18,
+            borderRadius:18,
+            boxShadow:'var(--shadow)',
+            textAlign:'center',
+            width: 320
+          }}>
+            <h3 style={{marginTop:0, color:'#0e2a4a', marginBottom:12}}>Great job! ✨</h3>
+
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8, marginBottom:14}}>
+              <img
+                src="/qr.png"
+                alt="Company QR code"
+                style={{
+                  width: 140,
+                  height: 140,
+                  borderRadius: 12,
+                  boxShadow: '0 6px 18px rgba(27,72,138,.18)'
+                }}
+              />
+              <div style={{fontSize:12, color:'#345b84'}}>Scan to learn more</div>
+            </div>
+
             <button
               onClick={()=>{
                 setWon(false);
@@ -196,7 +242,7 @@ export default function GameBoard({ data }){
                 setMatches({});
               }}
               className="btn secondary"
-              style={{marginTop:10}}
+              style={{marginTop:4, width:'100%'}}
             >
               Play Again
             </button>
