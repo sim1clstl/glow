@@ -155,7 +155,7 @@ export default function GameBoard({ data }){
 
         {/* Right: Text circles */}
         <div className="col right">
-          <h2>Skin Concerns</h2>
+          <h2>Benefits / Helps With</h2>
           <div className="list">
             {right.map((e,i)=> (
               <div key={e.id} className="card right">
