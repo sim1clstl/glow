@@ -83,7 +83,7 @@ button{font-weight:700;letter-spacing:.2px;border:none;border-radius:14px;cursor
   width: clamp(160px, 28vw, 300px);
   height: clamp(160px, 28vw, 300px);
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #ffffff 40%, #eaf4ff 100%);
+  background:#ffffff; /* pure white interior (no blue tint for PNGs) */
   border: 3px solid var(--ring);
   box-shadow:
     inset 0 0 0 8px rgba(141,192,255,0.15),
@@ -92,22 +92,26 @@ button{font-weight:700;letter-spacing:.2px;border:none;border-radius:14px;cursor
   overflow:hidden; /* contains the image */
 }
 
-/* soft tint overlay */
+/* soft highlight overlay (no blue cast) */
 .circleBubble::before{
   content:"";
   position:absolute; inset:0; border-radius:50%;
-  background: radial-gradient(circle, rgba(120,180,255,0.12), rgba(255,255,255,0) 70%);
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0) 70%
+  );
   pointer-events:none;
 }
 
-/* << FIX: image is NOT circular; it stays rectangular inside the circle */
+/* image stays rectangular; background fully transparent */
 .circleBubble img{
   max-width:92%;
   max-height:92%;
   object-fit:contain;  /* show whole product */
-  border-radius:0;     /* IMPORTANT: no extra circle clipping */
+  border-radius:0;     /* no circular clipping */
   display:block;
-  background:radial-gradient(circle, #f7fbff 0%, #eaf4ff 100%);
+  background:transparent;
 }
 
 /* text (right side) */
